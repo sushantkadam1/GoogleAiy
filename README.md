@@ -1,2 +1,2 @@
-# GoogleAiy
-Do sentiment analysis of the spoken sentence, perform some analysis.
+# GoogleAiy Google Cloud SentimentAnalysis
+Do sentiment analysis of the spoken sentence, perform some action.
