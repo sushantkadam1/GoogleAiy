@@ -108,6 +108,7 @@ def main():
             
             # break if nothing is said 3 times
             if breakCount == 3:
+                say("Good bye", lang='en-GB', volume=1, pitch=95, speed=100, device='default')
                 break
 
 if __name__ == '__main__':
