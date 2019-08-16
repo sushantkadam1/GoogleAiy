@@ -15,6 +15,9 @@ from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
 
+""" CHANGE THE VOLUME OF THE ASSISTANT HERE """
+ASSITANT_VOLUME = 1
+
 """ Some hints sentence that we want to input for the speech recognizer """
 def get_hints(language_code):
     if language_code.startswith('en_'):
@@ -67,9 +70,9 @@ def main():
         
             # If nothing is been said
             if text is None:
-                logging.info('You said nothing.')
                 board.led.state = Led.OFF
                 breakCount = breakCount + 1
+                logging.info('You said nothing. "%d" times' % breakCount)
                 continue
 
             if 'party time' in text:
@@ -98,17 +101,19 @@ def main():
             board.led.state = Led.OFF
         
             # SPEAK THE SENTIMENT # Accent is BRITISH   
-            say(speakThis, lang='en-GB', volume=1, pitch=95, speed=100, device='default')
+            say(speakThis, lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
            
             # To get out of the while loop say GOODBYE
             if 'goodbye' in text:
                 board.led.state = Led.OFF
-                say("Good bye", lang='en-GB', volume=1, pitch=95, speed=100, device='default')
+                logging.info('Good bye!')
+                say("Good bye", lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
                 break
             
             # break if nothing is said 3 times
             if breakCount == 3:
-                say("Good bye", lang='en-GB', volume=1, pitch=95, speed=100, device='default')
+                logging.info('You said nothing. "%d" times. GOODBYE!' % breakCount)
+                say("Good bye", lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
                 break
 
 if __name__ == '__main__':
