@@ -16,7 +16,7 @@ from google.cloud.language import enums
 from google.cloud.language import types
 
 """ CHANGE THE VOLUME OF THE ASSISTANT HERE """
-ASSITANT_VOLUME = 1
+ASSITANT_VOLUME = 60
 
 """ Some hints sentence that we want to input for the speech recognizer """
 def get_hints(language_code):
@@ -44,11 +44,11 @@ def main():
     hints = get_hints(args.language)
     
     # Create the client for aiy.cloud
-    client = CloudSpeechClient()
+    cstclient = CloudSpeechClient()
     # Create the client for sentiment analysis
-    client1 = language.LanguageServiceClient()
+    sentimentClient = language.LanguageServiceClient()
     
-    # Ccjeck if somethins is said, or break if nothing is said 3 times
+    # Check if something is said, or break if nothing is said 3 times
     breakCount = 0
     with Board() as board:
         # Run the loop untill the we say "GOODBYE"
@@ -57,23 +57,34 @@ def main():
             # LED ON to show we are listening
             board.led.state = Led.ON   
             # Call the cloud Speech to text function to get text from cloud
-            text = client.recognize(language_code=args.language,
+            text = cstclient.recognize(language_code=args.language,
                                     hint_phrases=hints)
         
             # LED OFF to indicate the some activity is happening
             board.led.state = Led.BLINK
-            document = types.Document(
-                content=text,
-                    type=enums.Document.Type.PLAIN_TEXT)
-        
+            
             logging.info('Say something that you want to analyse') 
         
             # If nothing is been said
             if text is None:
                 board.led.state = Led.OFF
                 breakCount = breakCount + 1
+                # break if nothing is said 3 times
+                if breakCount == 3:
+                    logging.info('You said nothing. "%d" times. GOODBYE!' % breakCount)
+                    say("Good bye", lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
+                    break
                 logging.info('You said nothing. "%d" times' % breakCount)
                 continue
+            else:
+                breakCount = 0 # RESET the break count back to 0
+            
+            # To get out of the while loop say GOODBYE
+            if 'goodbye' in text:
+                board.led.state = Led.OFF
+                logging.info('Good bye!')
+                say("Good bye", lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
+                break
 
             if 'party time' in text:
                 board.led.state = Led.BLINK
@@ -82,18 +93,22 @@ def main():
             # Display what you said
             logging.info('You said: "%s"' % text)
             board.led.state = Led.BLINK
+            
+            document = types.Document(
+                content=text,
+                    type=enums.Document.Type.PLAIN_TEXT)
         
             # Sending the text to sentiment analysis API
-            sentiment = client1.analyze_sentiment(document=document).document_sentiment    
+            sentiment = sentimentClient.analyze_sentiment(document=document).document_sentiment    
         
             # compare the score and decide if it is positive or negative
             # Add the sentimentmagnitude to the conditions to get better sentiments values
             if sentiment.score <= -0.25:
-                speakThis = 'Negative'
+                speakThis = 'Expresses Negativity'
             elif sentiment.score <= 0.25:
-                speakThis ='Neutral'
+                speakThis ='Expresses Neutrality'
             else:
-                speakThis = 'Positive'
+                speakThis = 'Expresses Positivity'
         
             # Display what you said
             logging.info('Sentiment: {}, {}'.format(sentiment.score, sentiment.magnitude))
@@ -101,20 +116,9 @@ def main():
             board.led.state = Led.OFF
         
             # SPEAK THE SENTIMENT # Accent is BRITISH   
-            say(speakThis, lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
-           
-            # To get out of the while loop say GOODBYE
-            if 'goodbye' in text:
-                board.led.state = Led.OFF
-                logging.info('Good bye!')
-                say("Good bye", lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
-                break
+            say(speakThis, lang='en-US', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
             
-            # break if nothing is said 3 times
-            if breakCount == 3:
-                logging.info('You said nothing. "%d" times. GOODBYE!' % breakCount)
-                say("Good bye", lang='en-GB', volume=ASSITANT_VOLUME, pitch=95, speed=100, device='default')
-                break
+            
 
 if __name__ == '__main__':
     main()
