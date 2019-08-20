@@ -12,8 +12,16 @@ def print_result(annotations):
 
     for index, sentence in enumerate(annotations.sentences):
         sentence_sentiment = sentence.sentiment.score
+        sentiment = sentence.sentiment.score
+        if sentiment <= -0.25:
+            speakThis = 'Expresses Negativity'
+        elif sentiment <= 0.25:
+            speakThis ='Expresses Neutrality'
+        else:
+            speakThis = 'Expresses Positivity'
         print('Sentence {} has a sentiment score of {}'.format(
-            index + 1, sentence_sentiment))
+            index + 1, sentence_sentiment), end="")
+        print("\nEmotions:", speakThis)
 
     print('Overall Sentiment: score of {} with magnitude of {}'.format(
         score, magnitude))
